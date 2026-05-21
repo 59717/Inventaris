@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>StockFlow | Inventory Management</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <!-- HEADER -->
+    <div class="header">
+        <div class="logo">
+            <h1><i class="fas fa-boxes"></i> StockFlow</h1>
+            <p>Inventory Management System</p>
+        </div>
+        <div class="header-actions">
+            <button class="icon-btn" id="exportBtn"><i class="fas fa-file-excel"></i> Export CSV</button>
+            <button class="icon-btn" id="themeToggle"><i class="fas fa-moon"></i> Dark</button>
+        </div>
+    </div>
+
+    <!-- STATS ROW -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <i class="fas fa-package"></i>
+            <h3>Total Item</h3>
+            <span id="totalBarangCount">0</span>
+        </div>
+        <div class="stat-card">
+            <i class="fas fa-cubes"></i>
+            <h3>Total Stok</h3>
+            <span id="totalStokCount">0</span>
+        </div>
+        <div class="stat-card">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Stok Menipis</h3>
+            <span id="lowStockCount">0</span>
+        </div>
+    </div>
+
+    <!-- Q PENCARIAN - DI ATAS -->
+    <div class="search-card">
+        <h3>🔍 Q Pencarian</h3>
+        <div class="search-box">
+            <div class="search-input-wrapper">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Cari barang / nama orang...">
+            </div>
+            <select id="kategoriFilter" class="filter-select">
+                <option value="">Semua Kategori</option>
+                <option>ATK</option>
+                <option>Elektronik</option>
+                <option>Janitor</option>
+            </select>
+        </div>
+        <div class="info-text">
+            <i class="fas fa-database"></i> Auto-save ke localStorage | <i class="fas fa-chart-line"></i> Stok &lt;5 akan warning
+        </div>
+    </div>
+
+    <!-- MANAGE INVENTORY - FORM -->
+    <div class="form-card">
+        <h2><i class="fas fa-plus-circle"></i> Manage Inventory</h2>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Nama Orang</label>
+                <input type="text" id="namaOrang" placeholder="ex: Najieb, Ilham">
+            </div>
+            <div class="form-group">
+                <label>Nama Barang</label>
+                <input type="text" id="namaBarang" placeholder="TV, Laptop, Kabel...">
+            </div>
+            <div class="form-group">
+                <label>Jumlah</label>
+                <input type="number" id="jumlahBarang" value="1" min="1">
+            </div>
+            <div class="form-group">
+                <label>Kategori</label>
+                <select id="kategoriBarang">
+                    <option>ATK</option>
+                    <option>Elektronik</option>
+                    <option>Janitor</option>
+                </select>
+            </div>
+            <div class="form-group full-width">
+                <label>Upload Gambar</label>
+                <input type="file" id="gambarUpload" accept="image/*">
+                <div class="preview-img"><img id="previewImg" width="45" height="45" style="border-radius: 10px; display:none;"></div>
+            </div>
+        </div>
+        <div class="btn-group">
+            <button class="btn btn-primary" id="btnTambah"><i class="fas fa-sign-in-alt"></i> Barang Masuk</button>
+            <button class="btn btn-warning" id="btnAmbilForm"><i class="fas fa-hand-holding-heart"></i> Ambil Barang</button>
+        </div>
+    </div>
+
+    <!-- STATISTIK STOK PER KATEGORI (CHART) -->
+    <div class="chart-card">
+        <h3><i class="fas fa-chart-bar"></i> Statistik Stok per Kategori</h3>
+        <canvas id="categoryChart"></canvas>
+    </div>
+
+    <!-- DAFTAR INVENTARIS (TABEL) -->
+    <div class="table-card">
+        <h3><i class="fas fa-table-list"></i> Daftar Inventaris</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>No</th><th>Gambar</th><th>Nama Orang</th><th>Nama Barang</th><th>Kategori</th><th>Waktu Input</th><th>Stok</th><th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr class="empty-row"><td colspan="8">✨ Belum ada data, tambah barang dulu ya!</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL EDIT -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <h3><i class="fas fa-pen"></i> Edit Barang</h3>
+        <div class="form-group"><label>Nama Orang</label><input type="text" id="editNamaOrang"></div>
+        <div class="form-group"><label>Nama Barang</label><input type="text" id="editNamaBarang"></div>
+        <div class="form-group"><label>Jumlah</label><input type="number" id="editJumlah" min="0"></div>
+        <div class="form-group"><label>Kategori</label>
+            <select id="editKategori">
+                <option>ATK</option>
+                <option>Elektronik</option>
+                <option>Janitor</option>
+            </select>
+        </div>
+        <div class="modal-buttons">
+            <button class="btn-primary" id="saveEditBtn" style="flex:1; padding:12px; border-radius:14px;">Simpan</button>
+            <button class="btn-warning" id="cancelEditBtn" style="flex:1; padding:12px; border-radius:14px;">Batal</button>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
